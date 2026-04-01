@@ -1,52 +1,56 @@
 import { NextResponse } from "next/server";
-import { buffer } from "stream/consumers";
 
-export async function GET() {
+const BASE_URL = "http://ec2-50-19-36-138.compute-1.amazonaws.com/api";
+
+// Helper para gerar os headers de autenticação e evitar repetição de código
+function getAuthHeaders() {
   const user = process.env.GOLEDGER_USER;
   const pass = process.env.GOLEDGER_PASS;
 
   if (!user || !pass) {
-    console.log(
-      "FATAL: Variaáveis de ambiente GOLEDGER_USER ou GOLEDGER_PASS não estão definidas.",
+    throw new Error(
+      "Variáveis GOLEDGER_USER ou GOLEDGER_PASS não configuradas no .env.local",
     );
-    return NextResponse.json({ error: "Missing credentials" }, { status: 500 });
   }
 
   const basicAuth = Buffer.from(`${user}:${pass}`).toString("base64");
 
-  try {
-    const response = await fetch(
-      "http://ec2-50-19-36-138.compute-1.amazonaws.com/api/query/search",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Basic ${basicAuth}`,
-        },
-        body: JSON.stringify({
-          query: {
-            selector: {
-              "@assetType": "tvshows",
-            },
-          },
-        }),
-        cache: "no-store",
-      },
-    );
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Basic ${basicAuth}`,
+  };
+}
 
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error(`Error GoLedger (Status ${response.status}):`, errorData);
+// ==========================================
+// 1. LER (GET) - Busca todas as séries
+// ==========================================
+export async function GET() {
+  try {
+    const response = await fetch(`${BASE_URL}/query/search`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        query: {
+          selector: {
+            "@assetType": "tvShows",
+          },
+        },
+      }),
+      cache: "no-store", // Essencial no Next.js para não congelar os dados
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || data.error) {
       return NextResponse.json(
-        { error: "Falha ao buscar dados na blockchain" },
-        { status: response.status },
+        { error: data.error || "Falha ao buscar dados na blockchain." },
+        { status: response.status === 200 ? 400 : response.status },
       );
     }
-    const data = await response.json();
 
     return NextResponse.json(data);
   } catch (error) {
-    console.error("Erro catastrófico no BFF:", error);
+    console.error("Erro no GET do BFF:", error);
     return NextResponse.json(
       { error: "Erro interno no servidor." },
       { status: 500 },
@@ -54,49 +58,40 @@ export async function GET() {
   }
 }
 
+// ==========================================
+// 2. CRIAR (POST) - Adiciona uma nova série
+// ==========================================
 export async function POST(request: Request) {
-  const user = process.env.GOLEDGER_USER;
-  const pass = process.env.GOLEDGER_PASS;
-  const basicAuth = Buffer.from(`${user}:${pass}`).toString("base64");
-
   try {
-    // 1. Recebe os dados limpos do seu front-end (React)
     const body = await request.json();
 
-    // 2. Faz o POST para a rota de criação da GoLedger (Verifique no Swagger se a URL exata é essa)
-    const response = await fetch(
-      "http://ec2-50-19-36-138.compute-1.amazonaws.com/api/invoke/createAsset",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Basic ${basicAuth}`,
-        },
-        // 3. Monta o payload do jeito burocrático que a blockchain exige
-        body: JSON.stringify({
-          asset: [
-            {
-              "@assetType": "tvShows",
-              title: body.title,
-              description: body.description,
-              // Lembra do schema? recommendedAge tem que ser Number, não String.
-              recommendedAge: Number(body.recommendedAge),
-            },
-          ],
-        }),
-      },
-    );
+    const response = await fetch(`${BASE_URL}/invoke/createAsset`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        asset: [
+          {
+            "@assetType": "tvShows",
+            title: body.title,
+            description: body.description,
+            recommendedAge: Number(body.recommendedAge), // Conversão vital para número
+          },
+        ],
+      }),
+    });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Erro da GoLedger ao criar:", errorText);
+    // Lemos a resposta REAL para capturar erros disfarçados de sucesso
+    const responseData = await response.json();
+    console.log("🔥 RESPOSTA REAL DA GOLEDGER (POST):", responseData);
+
+    if (!response.ok || responseData.error) {
       return NextResponse.json(
-        { error: "Falha ao gravar na blockchain." },
-        { status: response.status },
+        { error: responseData.error || "Falha ao gravar na blockchain." },
+        { status: response.status === 200 ? 400 : response.status },
       );
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: responseData });
   } catch (error) {
     console.error("Erro no POST do BFF:", error);
     return NextResponse.json(
@@ -106,71 +101,77 @@ export async function POST(request: Request) {
   }
 }
 
+// ==========================================
+// 3. ATUALIZAR (PUT) - Edita descrição e idade
+// ==========================================
 export async function PUT(request: Request) {
-  const user = process.env.GOLEDGER_USER;
-  const pass = process.env.GOLEDGER_PASS;
-  const basicAuth = Buffer.from(`${user}:${pass}`).toString("base64");
-
   try {
     const body = await request.json();
 
-    const response = await fetch(
-      "http://ec2-50-19-36-138.compute-1.amazonaws.com/api/invoke/updateAsset",
-      {
-        method: "POST",
-        headers: {
-          "Content-type": "application/json",
-          Authorization: `Basic ${basicAuth}`,
+    const response = await fetch(`${BASE_URL}/invoke/updateAsset`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        update: {
+          "@assetType": "tvShows",
+          title: body.title, // Chave primária: aponta QUEM vai ser atualizado
+          description: body.description,
+          recommendedAge: Number(body.recommendedAge),
         },
-        body: JSON.stringify({
-          update: {
-            "@assetType": "tvShows",
-            title: body.title,
-            description: body.description,
-            recommendedAge: Number(body.recommendedAge),
-          },
-        }),
-      },
-    );
-    if (!response.ok) throw new Error("Falha ao atualizar na blockchain");
-    return NextResponse.json({ success: true });
+      }),
+    });
+
+    const responseData = await response.json();
+
+    if (!response.ok || responseData.error) {
+      return NextResponse.json(
+        { error: responseData.error || "Falha ao atualizar na blockchain" },
+        { status: response.status === 200 ? 400 : response.status },
+      );
+    }
+
+    return NextResponse.json({ success: true, data: responseData });
   } catch (error) {
+    console.error("Erro no PUT do BFF:", error);
     return NextResponse.json(
-      { error: "Erro interno no servidor." },
+      { error: "Erro interno ao atualizar" },
       { status: 500 },
     );
   }
 }
 
+// ==========================================
+// 4. DELETAR (DELETE) - Remove a série pelo título
+// ==========================================
 export async function DELETE(request: Request) {
-  const user = process.env.GOLEDGER_USER;
-  const pass = process.env.GOLEDGER_PASS;
-  const basicAuth = Buffer.from(`${user}:${pass}`).toString("base64");
-
   try {
     const { title } = await request.json();
 
-    const response = await fetch(
-      "http://ec2-50-19-36-138.compute-1.amazonaws.com/api/invoke/deleteAsset",
-      {
-        method: "POST", //A GoLedger exige POST até para deletar, olha o Swagger
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Basic ${basicAuth}`,
+    const response = await fetch(`${BASE_URL}/invoke/deleteAsset`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        key: {
+          "@assetType": "tvShows",
+          title: title,
         },
-        body: JSON.stringify({
-          key: {
-            "@assetType": "tvShows",
-            title: title,
-          },
-        }),
-      },
-    );
-    if (!response.ok) throw new Error("Falha ao deletar na blockchain");
+      }),
+    });
+
+    const responseData = await response.json();
+
+    if (!response.ok || responseData.error) {
+      return NextResponse.json(
+        { error: responseData.error || "Falha ao deletar na blockchain" },
+        { status: response.status === 200 ? 400 : response.status },
+      );
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error("Erro no DELETE do BFF:", error);
     return NextResponse.json(
-      { error: "Erro ao deletar na blockchain." },
+      { error: "Erro interno ao deletar" },
       { status: 500 },
     );
   }
