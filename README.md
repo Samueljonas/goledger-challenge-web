@@ -1,36 +1,32 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GoLedger Challenge Web - React/Next.js
 
-## Getting Started
+Este repositório contém a solução para o desafio front-end da GoLedger, implementando um catálogo de séries integrado à rede blockchain fornecida.
 
-First, run the development server:
+## 🏗️ Decisões de Arquitetura
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Para garantir a segurança das credenciais (Basic Auth) e lidar com os tempos de resposta da blockchain, optei por não fazer chamadas diretas do navegador.
+Utilizei o **Next.js (App Router)** para construir um **BFF (Backend For Frontend)**.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- O frontend (React Client Components) utiliza **SWR** para chamadas otimistas, cache state e revalidação.
+- O backend (`app/api/...`) lida com a injeção do Basic Auth, mascara os dados sensíveis e gerencia o tratamento de erros profundos (erros lógicos da blockchain disfarçados de HTTP 200).
+- **Tailwind CSS** para estilização utilitária e responsiva sem dependências pesadas de UI.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🚀 Como Executar Localmente
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Instale as dependências:
+   \`\`\`bash
+   npm install
+   \`\`\`
 
-## Learn More
+2. **Crucial:** Crie um arquivo `.env.local` na raiz do projeto e insira as credenciais fornecidas por e-mail:
+   \`\`\`env
+   GOLEDGER_USER=seu_usuario_aqui
+   GOLEDGER_PASS=sua_senha_aqui
+   \`\`\`
 
-To learn more about Next.js, take a look at the following resources:
+3. Inicie o servidor de desenvolvimento:
+   \`\`\`bash
+   npm run dev
+   \`\`\`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+4. Acesse `http://localhost:3000` no seu navegador.
