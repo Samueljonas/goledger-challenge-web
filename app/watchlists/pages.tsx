@@ -20,8 +20,6 @@ interface Watchlist {
   tvShows: TvShowRef[];
 }
 
-const EMPTY_FORM = { name: "" };
-
 // ─── Fetcher ──────────────────────────────────────────────────────────────────
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 

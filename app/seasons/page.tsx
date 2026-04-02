@@ -6,8 +6,7 @@ import { fetcher } from "@/lib/fetcher";
 
 export default function SeasonsPage() {
   // Chamando a sua API de temporadas que você já refatorou
-  const { data, error, isLoading } = useSWR("/api/seasons", fetcher);
-
+  const { error, isLoading } = useSWR("/api/seasons", fetcher);
   if (error) {
     return (
       <div className="container">

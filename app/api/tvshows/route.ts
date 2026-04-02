@@ -13,8 +13,10 @@ export async function GET() {
       }),
     });
     return NextResponse.json(data);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Erro desconhecido";
+    return NextResponse.json({ error: errorMessage }, { status: 400 });
   }
 }
 
@@ -38,8 +40,10 @@ export async function POST(request: Request) {
       }),
     });
     return NextResponse.json(data);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Erro desconhecido";
+    return NextResponse.json({ error: errorMessage }, { status: 400 });
   }
 }
 
@@ -61,8 +65,10 @@ export async function PUT(request: Request) {
       }),
     });
     return NextResponse.json(data);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Erro desconhecido";
+    return NextResponse.json({ error: errorMessage }, { status: 400 });
   }
 }
 
@@ -82,7 +88,9 @@ export async function DELETE(request: Request) {
       }),
     });
     return NextResponse.json(data);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Erro desconhecido";
+    return NextResponse.json({ error: errorMessage }, { status: 400 });
   }
 }
