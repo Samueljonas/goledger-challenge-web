@@ -73,20 +73,21 @@ Para garantir a máxima leveza e compatibilidade (zero riscos de quebra de build
 ---
 
 ## 📂 Estrutura de Diretórios Principal
-
-├── app/
-│ ├── api/ # Route Handlers (O cofre do BFF)
-│ ├── seasons/ # Módulo de Temporadas
-│ ├── episodes/ # Módulo de Episódios
-│ ├── watchlists/ # Módulo de Listas de Desejos
-│ ├── page.tsx # Entry point (Módulo de TvShows)
-│ └── globals.css # Motor de Estilos Dark Mode
-├── lib/
-│ ├── auth.ts # Central de Autenticação e Fetch blindado (Server)
-│ └── fetcher.ts # Wrappers de SWR e mutações (Client)
-└── src/
-└── types/ # Definições de Domínio (TypeScript Interfaces)
-
+- `app/`
+  - `api/` (Route Handlers / BFF)
+  - `components/`
+  - `episodes/`
+  - `seasons/`
+  - `watchlists/`
+  - `globals.css`
+  - `layout.tsx`
+  - `page.tsx`
+- `lib/`
+  - `auth.ts`
+  - `fetcher.ts`
+- `src/`
+  - `types/`
+    - `index.ts`
 ---
 
 ## 📝 Regras de Negócio e Limitações da Rede (Anotações do Desenvolvedor)
