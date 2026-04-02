@@ -1,118 +1,90 @@
 import { NextRequest, NextResponse } from "next/server";
+import { goFetch } from "@/lib/auth"; // <-- Sem o GoLedgerError inventado
 
-const API_BASE = "http://ec2-50-19-36-138.compute-1.amazonaws.com/api";
-
-function getAuthHeaders(): HeadersInit {
-  const credentials = Buffer.from(
-    `${process.env.GOLEDGER_USER}:${process.env.GOLEDGER_PASS}`,
-  ).toString("base64");
-  return {
-    "Content-Type": "application/json",
-    Authorization: `Basic ${credentials}`,
-  };
+// O seu tratador de erros agora usa a classe nativa do JavaScript
+function errorResponse(err: unknown) {
+  if (err instanceof Error) {
+    return NextResponse.json({ error: err.message }, { status: 400 });
+  }
+  return NextResponse.json(
+    { error: "Erro catastrófico e desconhecido." },
+    { status: 500 },
+  );
 }
 
-// ─── GET: lista todas as seasons ─────────────────────────────────────────────
+// ... resto do seu código (GET, POST, etc)
+
 export async function GET() {
-  const res = await fetch(`${API_BASE}/query/search`, {
-    method: "POST",
-    headers: getAuthHeaders(),
-    cache: "no-store",
-    body: JSON.stringify({
-      query: { selector: { "@assetType": "season" } },
-    }),
-  });
-
-  const data = await res.json();
-  if (data.error) {
-    return NextResponse.json({ error: data.error }, { status: 500 });
+  try {
+    const data = await goFetch("/query/search", {
+      method: "POST",
+      body: JSON.stringify({
+        query: { selector: { "@assetType": "season" } },
+      }),
+    });
+    return NextResponse.json(data);
+  } catch (err) {
+    return errorResponse(err);
   }
-
-  return NextResponse.json(data);
 }
 
-// ─── POST: cria nova season ───────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-
-  const payload = {
-    asset: [
-      {
-        "@assetType": "season",
-        tvShowName: body.tvShowName, // isKey — chave composta pt.1
-        seasonNumber: Number(body.seasonNumber), // isKey — chave composta pt.2
-        episodes: Number(body.episodes ?? 0),
-      },
-    ],
-  };
-
-  const res = await fetch(`${API_BASE}/invoke/createAsset`, {
-    method: "POST",
-    headers: getAuthHeaders(),
-    body: JSON.stringify(payload),
-  });
-
-  const data = await res.json();
-
-  // Falso positivo: HTTP 200 com erro no body
-  if (data.error) {
-    return NextResponse.json({ error: data.error }, { status: 409 });
+  try {
+    const body = await req.json();
+    const data = await goFetch("/invoke/createAsset", {
+      method: "POST",
+      body: JSON.stringify({
+        asset: [
+          {
+            "@assetType": "season",
+            tvShowName: body.tvShowName,
+            seasonNumber: Number(body.seasonNumber),
+            episodes: Number(body.episodes ?? 0),
+          },
+        ],
+      }),
+    });
+    return NextResponse.json(data, { status: 201 });
+  } catch (err) {
+    return errorResponse(err);
   }
-
-  return NextResponse.json(data, { status: 201 });
 }
 
-// ─── PUT: atualiza season (chaves primárias NUNCA são enviadas no body) ───────
 export async function PUT(req: NextRequest) {
-  const body = await req.json();
-
-  const payload = {
-    update: {
-      "@assetType": "season",
-      tvShowName: body.tvShowName, // obrigatório para resolver o asset
-      seasonNumber: Number(body.seasonNumber), // obrigatório para resolver o asset
-      episodes: Number(body.episodes),
-    },
-  };
-
-  const res = await fetch(`${API_BASE}/invoke/updateAsset`, {
-    method: "PUT",
-    headers: getAuthHeaders(),
-    body: JSON.stringify(payload),
-  });
-
-  const data = await res.json();
-
-  if (data.error) {
-    return NextResponse.json({ error: data.error }, { status: 400 });
+  try {
+    const body = await req.json();
+    const data = await goFetch("/invoke/updateAsset", {
+      method: "PUT",
+      body: JSON.stringify({
+        update: {
+          "@assetType": "season",
+          tvShowName: body.tvShowName,
+          seasonNumber: Number(body.seasonNumber),
+          episodes: Number(body.episodes),
+        },
+      }),
+    });
+    return NextResponse.json(data);
+  } catch (err) {
+    return errorResponse(err);
   }
-
-  return NextResponse.json(data);
 }
 
-// ─── DELETE ───────────────────────────────────────────────────────────────────
 export async function DELETE(req: NextRequest) {
-  const body = await req.json();
-
-  const payload = {
-    key: {
-      "@assetType": "season",
-      tvShowName: body.tvShowName,
-      seasonNumber: Number(body.seasonNumber),
-    },
-  };
-
-  const res = await fetch(`${API_BASE}/invoke/deleteAsset`, {
-    method: "DELETE",
-    headers: getAuthHeaders(),
-    body: JSON.stringify(payload),
-  });
-
-  const data = await res.json();
-
-  if (data.error) {
-    return NextResponse.json({ error: data.error }, { status: 400 });
+  try {
+    const body = await req.json();
+    await goFetch("/invoke/deleteAsset", {
+      method: "DELETE",
+      body: JSON.stringify({
+        key: {
+          "@assetType": "season",
+          tvShowName: body.tvShowName,
+          seasonNumber: Number(body.seasonNumber),
+        },
+      }),
+    });
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    return errorResponse(err);
   }
-
-  return NextResponse.json({ success: true });
 }
