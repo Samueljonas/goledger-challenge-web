@@ -22,7 +22,7 @@ export async function goFetch(endpoint: string, options: RequestInit = {}) {
 
   // CORREÇÃO: Programação Defensiva contra corpo vazio
   const text = await response.text();
-  let data: any = {};
+  let data: { error?: string; [key: string]: unknown } = {};
 
   if (text) {
     try {

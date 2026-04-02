@@ -38,7 +38,7 @@ export async function apiFetch<T = unknown>(
 
   // CORREÇÃO: Leitura em duas etapas no Client-side
   const text = await res.text();
-  let data: any = {};
+  let data: { error?: string; [key: string]: unknown } = {};
 
   if (text) {
     try {
