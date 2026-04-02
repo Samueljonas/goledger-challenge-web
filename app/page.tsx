@@ -2,7 +2,7 @@
 
 import useSWR, { useSWRConfig } from "swr";
 import { useState } from "react";
-import { AGE_RATINGS, TvShow } from "@/src/types";
+import { AGE_RATINGS, TvShow } from "../src/types";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
