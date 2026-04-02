@@ -1,122 +1,90 @@
 import { NextRequest, NextResponse } from "next/server";
+import { goFetch } from "@/lib/auth"; // <-- Sem o GoLedgerError inventado
 
-const API_BASE = "http://ec2-50-19-36-138.compute-1.amazonaws.com/api";
-
-function getAuthHeaders(): HeadersInit {
-  const credentials = Buffer.from(
-    `${process.env.GOLEDGER_USER}:${process.env.GOLEDGER_PASS}`,
-  ).toString("base64");
-  return {
-    "Content-Type": "application/json",
-    Authorization: `Basic ${credentials}`,
-  };
+// O seu tratador de erros agora usa a classe nativa do JavaScript
+function errorResponse(err: unknown) {
+  if (err instanceof Error) {
+    return NextResponse.json({ error: err.message }, { status: 400 });
+  }
+  return NextResponse.json(
+    { error: "Erro catastrófico e desconhecido." },
+    { status: 500 },
+  );
 }
 
-// ─── GET: lista todas as watchlists ──────────────────────────────────────────
+// ... resto do seu código (GET, POST, etc)
+
 export async function GET() {
-  const res = await fetch(`${API_BASE}/query/search`, {
-    method: "POST",
-    headers: getAuthHeaders(),
-    cache: "no-store",
-    body: JSON.stringify({
-      query: { selector: { "@assetType": "watchlist" } },
-    }),
-  });
-
-  const data = await res.json();
-  if (data.error) {
-    return NextResponse.json({ error: data.error }, { status: 500 });
+  try {
+    const data = await goFetch("/query/search", {
+      method: "POST",
+      body: JSON.stringify({
+        query: { selector: { "@assetType": "watchlist" } },
+      }),
+    });
+    return NextResponse.json(data);
+  } catch (err) {
+    return errorResponse(err);
   }
-
-  return NextResponse.json(data);
 }
 
-// ─── POST: cria watchlist (sem tvShows ainda) ─────────────────────────────────
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-
-  const payload = {
-    asset: [
-      {
-        "@assetType": "watchlist",
-        name: body.name, // isKey
-        tvShows: [], // array de referências — populado via PUT
-      },
-    ],
-  };
-
-  const res = await fetch(`${API_BASE}/invoke/createAsset`, {
-    method: "POST",
-    headers: getAuthHeaders(),
-    body: JSON.stringify(payload),
-  });
-
-  const data = await res.json();
-
-  if (data.error) {
-    return NextResponse.json({ error: data.error }, { status: 409 });
+  try {
+    const body = await req.json();
+    const data = await goFetch("/invoke/createAsset", {
+      method: "POST",
+      body: JSON.stringify({
+        asset: [
+          {
+            "@assetType": "watchlist",
+            name: body.name,
+            tvShows: [],
+          },
+        ],
+      }),
+    });
+    return NextResponse.json(data, { status: 201 });
+  } catch (err) {
+    return errorResponse(err);
   }
-
-  return NextResponse.json(data, { status: 201 });
 }
 
-// ─── PUT: substitui a lista de tvShows da watchlist ───────────────────────────
-// O body esperado: { name: string, tvShows: string[] }
-// tvShows é um array de titles — convertemos para referências no formato GoLedger
 export async function PUT(req: NextRequest) {
-  const body = await req.json();
+  try {
+    const body = await req.json();
 
-  // Cada entrada precisa ser uma referência de asset, não uma string pura
-  const tvShowRefs = (body.tvShows as string[]).map((title) => ({
-    "@assetType": "tvshow",
-    title,
-  }));
+    const tvShowRefs = (body.tvShows as string[]).map((title) => ({
+      "@assetType": "tvshow",
+      title,
+    }));
 
-  const payload = {
-    update: {
-      "@assetType": "watchlist",
-      name: body.name, // isKey — identifica o asset no ledger
-      tvShows: tvShowRefs,
-    },
-  };
-
-  const res = await fetch(`${API_BASE}/invoke/updateAsset`, {
-    method: "PUT",
-    headers: getAuthHeaders(),
-    body: JSON.stringify(payload),
-  });
-
-  const data = await res.json();
-
-  if (data.error) {
-    return NextResponse.json({ error: data.error }, { status: 400 });
+    const data = await goFetch("/invoke/updateAsset", {
+      method: "PUT",
+      body: JSON.stringify({
+        update: {
+          "@assetType": "watchlist",
+          name: body.name,
+          tvShows: tvShowRefs,
+        },
+      }),
+    });
+    return NextResponse.json(data);
+  } catch (err) {
+    return errorResponse(err);
   }
-
-  return NextResponse.json(data);
 }
 
-// ─── DELETE: remove a watchlist inteira ──────────────────────────────────────
 export async function DELETE(req: NextRequest) {
-  const body = await req.json();
-
-  const payload = {
-    key: {
-      "@assetType": "watchlist",
-      name: body.name,
-    },
-  };
-
-  const res = await fetch(`${API_BASE}/invoke/deleteAsset`, {
-    method: "DELETE",
-    headers: getAuthHeaders(),
-    body: JSON.stringify(payload),
-  });
-
-  const data = await res.json();
-
-  if (data.error) {
-    return NextResponse.json({ error: data.error }, { status: 400 });
+  try {
+    const body = await req.json();
+    await goFetch("/invoke/deleteAsset", {
+      method: "DELETE",
+      body: JSON.stringify({
+        key: { "@assetType": "watchlist", name: body.name },
+      }),
+    });
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    return errorResponse(err);
   }
-
-  return NextResponse.json({ success: true });
 }
