@@ -1,23 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { goFetch } from "@/lib/auth"; // <-- Sem o GoLedgerError inventado
+import { goFetch } from "@/lib/auth";
 
-// O seu tratador de erros agora usa a classe nativa do JavaScript
-function errorResponse(err: unknown) {
-  if (err instanceof Error) {
-    return NextResponse.json({ error: err.message }, { status: 400 });
-  }
-  return NextResponse.json(
-    { error: "Erro catastrófico e desconhecido." },
-    { status: 500 },
-  );
+function errorResponse(err: unknown, status = 500) {
+  const message = err instanceof Error ? err.message : "Erro desconhecido";
+  return NextResponse.json({ error: message }, { status });
 }
 
-export async function GET() {
+// ─── GET ──────────────────────────────────────────────────────────────────────
+export async function GET(req: NextRequest) {
   try {
     const data = await goFetch("/query/search", {
       method: "POST",
       body: JSON.stringify({
-        query: { selector: { "@assetType": "episode" } },
+        query: { selector: { "@assetType": "episodes" } },
       }),
     });
     return NextResponse.json(data);
@@ -26,66 +21,86 @@ export async function GET() {
   }
 }
 
+// ─── POST ─────────────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+
+    // Montagem estrita baseada no getSchema
+    const assetPayload: any = {
+      "@assetType": "episodes",
+      season: {
+        "@assetType": "seasons",
+        "@key": body.season["@key"], // CORRIGIDO: Lendo do objeto aninhado que o Front-end envia
+      },
+      episodeNumber: Number(body.episodeNumber),
+      title: body.title,
+      description: body.description,
+      releaseDate: new Date(body.releaseDate).toISOString(), // A API exige datetime
+    };
+
+    // Rating é o único opcional. Só enviamos se o usuário preencheu.
+    if (body.rating) {
+      assetPayload.rating = Number(body.rating);
+    }
+
+    // IMPRIME O PAYLOAD NO TERMINAL DO SEU VS CODE PARA PROVA REAL
+    console.log(
+      "🎬 PAYLOAD DO EPISÓDIO INDO PARA AWS:",
+      JSON.stringify({ asset: [assetPayload] }, null, 2),
+    );
+
     const data = await goFetch("/invoke/createAsset", {
       method: "POST",
-      body: JSON.stringify({
-        asset: [
-          {
-            "@assetType": "episode",
-            tvShowName: body.tvShowName,
-            seasonNumber: Number(body.seasonNumber),
-            episodeNumber: Number(body.episodeNumber),
-            episodeName: body.episodeName,
-          },
-        ],
-      }),
+      body: JSON.stringify({ asset: [assetPayload] }),
     });
+
     return NextResponse.json(data, { status: 201 });
   } catch (err) {
-    return errorResponse(err);
+    return errorResponse(err, 409);
   }
 }
-
+// ─── PUT ──────────────────────────────────────────────────────────────────────
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
+
+    // ATENÇÃO: Nunca enviamos season e episodeNumber no update porque são isKey: true
+    const updatePayload: any = {
+      "@assetType": "episodes",
+      "@key": body["@key"],
+      title: body.title,
+      description: body.description,
+      releaseDate: new Date(body.releaseDate).toISOString(),
+    };
+
+    if (body.rating) {
+      updatePayload.rating = Number(body.rating);
+    }
+
     const data = await goFetch("/invoke/updateAsset", {
-      method: "PUT",
-      body: JSON.stringify({
-        update: {
-          "@assetType": "episode",
-          tvShowName: body.tvShowName,
-          seasonNumber: Number(body.seasonNumber),
-          episodeNumber: Number(body.episodeNumber),
-          episodeName: body.episodeName,
-        },
-      }),
+      method: "POST", // Invoke é sempre POST
+      body: JSON.stringify({ update: updatePayload }),
     });
+
     return NextResponse.json(data);
   } catch (err) {
-    return errorResponse(err);
+    return errorResponse(err, 400);
   }
 }
 
+// ─── DELETE ───────────────────────────────────────────────────────────────────
 export async function DELETE(req: NextRequest) {
   try {
     const body = await req.json();
     await goFetch("/invoke/deleteAsset", {
-      method: "DELETE",
+      method: "POST", // Invoke é sempre POST
       body: JSON.stringify({
-        key: {
-          "@assetType": "episode",
-          tvShowName: body.tvShowName,
-          seasonNumber: Number(body.seasonNumber),
-          episodeNumber: Number(body.episodeNumber),
-        },
+        key: { "@assetType": "episodes", "@key": body["@key"] },
       }),
     });
     return NextResponse.json({ success: true });
   } catch (err) {
-    return errorResponse(err);
+    return errorResponse(err, 400);
   }
 }

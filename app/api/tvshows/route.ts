@@ -1,31 +1,40 @@
-import { NextResponse } from "next/server";
-import { goFetch } from "@/lib/auth"; // Importa o seu motor blindado
+import { NextRequest, NextResponse } from "next/server";
+import { goFetch } from "@/lib/auth";
 
-// ==========================================
-// 1. LER (GET)
-// ==========================================
-export async function GET() {
+function errorResponse(err: unknown, status = 500) {
+  const message = err instanceof Error ? err.message : "Erro desconhecido";
+  return NextResponse.json({ error: message }, { status });
+}
+
+export async function GET(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url);
+    const key = searchParams.get("key");
+
+    let query: any = { "@assetType": "tvShows" };
+
+    if (key) {
+      query = {
+        "@assetType": "tvShows",
+        "@key": key,
+      };
+    }
+
     const data = await goFetch("/query/search", {
       method: "POST",
       body: JSON.stringify({
-        query: { selector: { "@assetType": "tvShows" } },
+        query: { selector: query },
       }),
     });
     return NextResponse.json(data);
-  } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Erro desconhecido";
-    return NextResponse.json({ error: errorMessage }, { status: 400 });
+  } catch (err) {
+    return errorResponse(err);
   }
 }
 
-// ==========================================
-// 2. CRIAR (POST)
-// ==========================================
-export async function POST(request: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const body = await request.json();
+    const body = await req.json();
     const data = await goFetch("/invoke/createAsset", {
       method: "POST",
       body: JSON.stringify({
@@ -34,63 +43,48 @@ export async function POST(request: Request) {
             "@assetType": "tvShows",
             title: body.title,
             description: body.description,
-            recommendedAge: Number(body.recommendedAge), // Tipagem estrita
+            recommendedAge: Number(body.recommendedAge),
           },
         ],
       }),
     });
-    return NextResponse.json(data);
-  } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Erro desconhecido";
-    return NextResponse.json({ error: errorMessage }, { status: 400 });
+    return NextResponse.json(data, { status: 201 });
+  } catch (err) {
+    return errorResponse(err, 409);
   }
 }
 
-// ==========================================
-// 3. ATUALIZAR (PUT)
-// ==========================================
-export async function PUT(request: Request) {
+export async function PUT(req: NextRequest) {
   try {
-    const body = await request.json();
+    const body = await req.json();
     const data = await goFetch("/invoke/updateAsset", {
-      method: "POST", // ATENÇÃO: Na Hyperledger, invoke é SEMPRE POST!
+      method: "PUT",
       body: JSON.stringify({
         update: {
           "@assetType": "tvShows",
-          title: body.title, // Chave primária (imexível)
+          title: body.title, // isKey — necessário para resolver
           description: body.description,
           recommendedAge: Number(body.recommendedAge),
         },
       }),
     });
     return NextResponse.json(data);
-  } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Erro desconhecido";
-    return NextResponse.json({ error: errorMessage }, { status: 400 });
+  } catch (err) {
+    return errorResponse(err, 400);
   }
 }
 
-// ==========================================
-// 4. DELETAR (DELETE)
-// ==========================================
-export async function DELETE(request: Request) {
+export async function DELETE(req: NextRequest) {
   try {
-    const { title } = await request.json();
-    const data = await goFetch("/invoke/deleteAsset", {
-      method: "POST", // ATENÇÃO: Na Hyperledger, invoke é SEMPRE POST!
+    const body = await req.json();
+    await goFetch("/invoke/deleteAsset", {
+      method: "DELETE",
       body: JSON.stringify({
-        key: {
-          "@assetType": "tvShows",
-          title: title,
-        },
+        key: { "@assetType": "tvShows", title: body.title },
       }),
     });
-    return NextResponse.json(data);
-  } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Erro desconhecido";
-    return NextResponse.json({ error: errorMessage }, { status: 400 });
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    return errorResponse(err, 400);
   }
 }

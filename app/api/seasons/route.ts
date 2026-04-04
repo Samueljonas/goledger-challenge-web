@@ -1,90 +1,110 @@
 import { NextRequest, NextResponse } from "next/server";
-import { goFetch } from "@/lib/auth"; // <-- Sem o GoLedgerError inventado
+import { goFetch } from "@/lib/auth";
 
-// O seu tratador de erros agora usa a classe nativa do JavaScript
-function errorResponse(err: unknown) {
-  if (err instanceof Error) {
-    return NextResponse.json({ error: err.message }, { status: 400 });
-  }
-  return NextResponse.json(
-    { error: "Erro catastrófico e desconhecido." },
-    { status: 500 },
-  );
+function errorResponse(err: unknown, status = 500) {
+  const message = err instanceof Error ? err.message : "Erro desconhecido";
+  return NextResponse.json({ error: message }, { status });
 }
 
-// ... resto do seu código (GET, POST, etc)
-
-export async function GET() {
+// ─── GET ──────────────────────────────────────────────────────────────────────
+export async function GET(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url);
+    const tvShowKey = searchParams.get("tvShowKey");
+
+    // Buscamos todas as temporadas
     const data = await goFetch("/query/search", {
       method: "POST",
       body: JSON.stringify({
-        query: { selector: { "@assetType": "season" } },
+        query: { selector: { "@assetType": "seasons" } },
       }),
     });
+
+    if (tvShowKey && data && Array.isArray(data.result)) {
+      data.result = data.result.filter(
+        (season: { tvShow?: { "@key": string } }) =>
+          season.tvShow?.["@key"] === tvShowKey,
+      );
+    }
+
     return NextResponse.json(data);
   } catch (err) {
     return errorResponse(err);
   }
 }
 
+// ─── POST ─────────────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+
+    const payloadParaAWS = {
+      asset: [
+        {
+          "@assetType": "seasons",
+          number: Number(body.number),
+          year: Number(body.year),
+          tvShow: {
+            "@assetType": "tvShows",
+            "@key": body.tvShow["@key"], // Se isso vier undefined, o 409 é certo
+          },
+        },
+      ],
+    };
+
+    // IMPRIME O PAYLOAD NO TERMINAL DO SEU VS CODE
+    console.log(
+      "🔥 PAYLOAD INDO PARA A AWS:",
+      JSON.stringify(payloadParaAWS, null, 2),
+    );
+
     const data = await goFetch("/invoke/createAsset", {
       method: "POST",
-      body: JSON.stringify({
-        asset: [
-          {
-            "@assetType": "season",
-            tvShowName: body.tvShowName,
-            seasonNumber: Number(body.seasonNumber),
-            episodes: Number(body.episodes ?? 0),
-          },
-        ],
-      }),
+      body: JSON.stringify(payloadParaAWS),
     });
+
     return NextResponse.json(data, { status: 201 });
   } catch (err) {
-    return errorResponse(err);
+    return errorResponse(err, 409);
   }
 }
 
+// ─── PUT ──────────────────────────────────────────────────────────────────────
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
     const data = await goFetch("/invoke/updateAsset", {
-      method: "PUT",
+      method: "POST", // CORRIGIDO: Invoke é SEMPRE POST na AWS
       body: JSON.stringify({
         update: {
-          "@assetType": "season",
-          tvShowName: body.tvShowName,
-          seasonNumber: Number(body.seasonNumber),
-          episodes: Number(body.episodes),
+          "@assetType": "seasons",
+          "@key": body["@key"],
+          year: Number(body.year),
+          // 'number' foi removido daqui pois o Schema diz que é isKey: true
         },
       }),
     });
     return NextResponse.json(data);
   } catch (err) {
-    return errorResponse(err);
+    return errorResponse(err, 400);
   }
 }
 
+// ─── DELETE ───────────────────────────────────────────────────────────────────
 export async function DELETE(req: NextRequest) {
   try {
     const body = await req.json();
     await goFetch("/invoke/deleteAsset", {
-      method: "DELETE",
+      method: "POST", // CORRIGIDO: Invoke é SEMPRE POST na AWS
       body: JSON.stringify({
         key: {
-          "@assetType": "season",
-          tvShowName: body.tvShowName,
-          seasonNumber: Number(body.seasonNumber),
+          "@assetType": "seasons",
+          "@key": body["@key"],
         },
       }),
     });
     return NextResponse.json({ success: true });
   } catch (err) {
-    return errorResponse(err);
+    return errorResponse(err, 400);
   }
 }
