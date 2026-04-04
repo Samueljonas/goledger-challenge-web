@@ -3,7 +3,7 @@
 import useSWR, { useSWRConfig } from "swr";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { AGE_RATINGS, TvShow } from "../src/types";
+import { AGE_RATINGS, TvShow, Watchlist } from "../src/types";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -393,7 +393,7 @@ export default function Home() {
         </div>
       ) : filteredShows.length === 0 ? (
         <div className="status-box">
-          Nenhuma série encontrada com '{searchQuery}'
+          Nenhuma série encontrada com &quot;{searchQuery}&quot;{" "}
         </div>
       ) : (
         <div className="grid">
@@ -466,14 +466,11 @@ export default function Home() {
                       Nenhuma watchlist criada ainda
                     </p>
                   ) : (
-                    watchlists.map((Watchlist: any) => (
+                    watchlists.map((wl: Watchlist) => (
                       <button
-                        key={Watchlist["@key"]}
+                        key={wl["@key"]}
                         onClick={() =>
-                          handleAddToWatchlist(
-                            Watchlist["@key"],
-                            show["@key"] || "",
-                          )
+                          handleAddToWatchlist(wl["@key"], show["@key"] || "")
                         }
                         style={{
                           display: "block",
@@ -494,7 +491,7 @@ export default function Home() {
                           e.currentTarget.style.backgroundColor = "#2a2a2a";
                         }}
                       >
-                        {Watchlist.title}
+                        {wl.title}
                       </button>
                     ))
                   )}

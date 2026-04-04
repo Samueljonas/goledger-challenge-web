@@ -294,7 +294,7 @@ export default function WatchlistsPage() {
           wl.title.toLowerCase().includes(searchQuery.toLowerCase()),
         ).length === 0 ? (
         <div className="status-box">
-          Nenhuma watchlist encontrada com '{searchQuery}'.
+          Nenhuma watchlist encontrada com &quot;{searchQuery}&quot;.
         </div>
       ) : (
         <div className="card-grid">
