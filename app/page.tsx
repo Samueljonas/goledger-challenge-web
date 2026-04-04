@@ -146,7 +146,9 @@ export default function Home() {
       const watchlists = Array.isArray(watchlistsData)
         ? watchlistsData
         : (watchlistsData?.result ?? []);
-      const watchlist = watchlists.find((w: any) => w["@key"] === watchlistKey);
+      const watchlist = watchlists.find(
+        (w: Record<string, unknown>) => w["@key"] === watchlistKey,
+      );
 
       if (!watchlist) {
         throw new Error("Watchlist não encontrada");
@@ -155,7 +157,9 @@ export default function Home() {
       const tvShows = watchlist.tvShows || [];
 
       // Verificar se a série já está na watchlist
-      if (tvShows.some((ref: any) => ref["@key"] === showKey)) {
+      if (
+        tvShows.some((ref: Record<string, unknown>) => ref["@key"] === showKey)
+      ) {
         setFeedback("Esta série já está nesta watchlist");
         setTimeout(() => setFeedback(""), 3000);
         return;
@@ -167,7 +171,12 @@ export default function Home() {
         body: JSON.stringify({
           title: watchlist.title,
           description: watchlist.description || "",
-          tvShows: [...(tvShows || []).map((ref: any) => ref["@key"]), showKey],
+          tvShows: [
+            ...(tvShows || []).map(
+              (ref: Record<string, unknown>) => ref["@key"],
+            ),
+            showKey,
+          ],
         }),
       });
 

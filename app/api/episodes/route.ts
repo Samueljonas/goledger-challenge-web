@@ -66,7 +66,7 @@ export async function PUT(_req: NextRequest) {
     const body = await _req.json();
 
     // ATENÇÃO: Nunca enviamos season e episodeNumber no update porque são isKey: true
-    const updatePayload: any = {
+    const updatePayload: Record<string, unknown> = {
       "@assetType": "episodes",
       "@key": body["@key"],
       title: body.title,

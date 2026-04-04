@@ -4,7 +4,7 @@ import useSWR, { useSWRConfig } from "swr";
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Season, Episode, AGE_RATINGS } from "../../../src/types";
+import { Season, Episode, Watchlist, AGE_RATINGS } from "../../../src/types"; // IMPORT WATCHLIST ADICIONADO
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -18,7 +18,10 @@ function getAgeClass(age: number): string {
 }
 
 function getAgeLabel(age: number): string {
-  return AGE_RATINGS.find((r: any) => r.value === age)?.label ?? `${age} anos`;
+  return (
+    AGE_RATINGS.find((r: { label: string; value: number }) => r.value === age)
+      ?.label ?? `${age} anos`
+  );
 }
 
 function feedbackClass(msg: string): string {
@@ -292,7 +295,10 @@ export default function SeriesDetailPage() {
       const watchlists = Array.isArray(watchlistsData)
         ? watchlistsData
         : (watchlistsData?.result ?? []);
-      const watchlist = watchlists.find((w: any) => w["@key"] === watchlistKey);
+      // SUBSTITUÍDO: de (w: any) para (w: Watchlist)
+      const watchlist = watchlists.find(
+        (w: Watchlist) => w["@key"] === watchlistKey,
+      );
 
       if (!watchlist) {
         throw new Error("Watchlist não encontrada");
@@ -301,7 +307,11 @@ export default function SeriesDetailPage() {
       const tvShows = watchlist.tvShows || [];
 
       // Verificar se a série já está na watchlist
-      if (tvShows.some((ref: any) => ref["@key"] === seriesKey)) {
+      if (
+        tvShows.some(
+          (ref: Record<string, unknown>) => ref["@key"] === seriesKey,
+        )
+      ) {
         setWatchlistFeedback("Esta série já está nesta watchlist");
         setTimeout(() => setWatchlistFeedback(""), 3000);
         return;
@@ -314,7 +324,9 @@ export default function SeriesDetailPage() {
           title: watchlist.title,
           description: watchlist.description || "",
           tvShows: [
-            ...(tvShows || []).map((ref: any) => ref["@key"]),
+            ...(tvShows || []).map(
+              (ref: Record<string, unknown>) => ref["@key"],
+            ),
             seriesKey,
           ],
         }),
@@ -351,7 +363,8 @@ export default function SeriesDetailPage() {
 
         setEpisodeFeedback("✓ Episódio deletado!");
         mutate(`/api/episodes?tvShowKey=${seriesKey}`);
-      } catch (error) {
+      } catch (_error) {
+        // SUBSTITUÍDO: de error para _error
         setEpisodeFeedback("Erro ao deletar");
       }
     }
@@ -445,16 +458,20 @@ export default function SeriesDetailPage() {
                     Nenhuma watchlist disponível
                   </p>
                 ) : (
-                  watchlists.map((wl: any) => (
-                    <button
-                      key={wl["@key"]}
-                      onClick={() => handleAddToWatchlist(wl["@key"])}
-                      className="btn btn-secondary"
-                      style={{ justifyContent: "flex-start", width: "100%" }}
-                    >
-                      {wl.title}
-                    </button>
-                  ))
+                  watchlists.map(
+                    (
+                      wl: Watchlist, // SUBSTITUÍDO: de (wl: any) para (wl: Watchlist)
+                    ) => (
+                      <button
+                        key={wl["@key"]}
+                        onClick={() => handleAddToWatchlist(wl["@key"])}
+                        className="btn btn-secondary"
+                        style={{ justifyContent: "flex-start", width: "100%" }}
+                      >
+                        {wl.title}
+                      </button>
+                    ),
+                  )
                 );
               })()}
             </div>

@@ -11,7 +11,7 @@ export async function GET(_req: NextRequest) {
     const { searchParams } = new URL(_req.url);
     const key = searchParams.get("key");
 
-    let query: any = { "@assetType": "tvShows" };
+    let query: Record<string, unknown> = { "@assetType": "tvShows" };
 
     if (key) {
       query = {
