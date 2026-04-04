@@ -4,9 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const LINKS = [
-  { href: "/", label: "Séries", icon: "◈" },
-  { href: "/seasons", label: "Temporadas", icon: "◫" },
-  { href: "/episodes", label: "Episódios", icon: "▷" },
+  { href: "/", label: "Séries", icon: "🎬" },
   { href: "/watchlists", label: "Watchlists", icon: "♡" },
 ];
 
