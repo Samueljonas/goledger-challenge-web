@@ -7,7 +7,7 @@ function errorResponse(err: unknown, status = 500) {
 }
 
 // ─── GET ──────────────────────────────────────────────────────────────────────
-export async function GET(_req: NextRequest) {
+export async function GET() {
   try {
     const data = await goFetch("/query/search", {
       method: "POST",

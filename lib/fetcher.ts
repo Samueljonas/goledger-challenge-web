@@ -43,7 +43,7 @@ export async function apiFetch<T = unknown>(
   if (text) {
     try {
       data = JSON.parse(text);
-    } catch (e) {
+    } catch {
       console.warn("Front-end: Resposta não é JSON válido", text);
     }
   }

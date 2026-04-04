@@ -27,7 +27,7 @@ export async function goFetch(endpoint: string, options: RequestInit = {}) {
   if (text) {
     try {
       data = JSON.parse(text);
-    } catch (e) {
+    } catch {
       console.warn(
         "Aviso: A API retornou um texto que não é JSON válido:",
         text,

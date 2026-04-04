@@ -393,7 +393,7 @@ export default function Home() {
         </div>
       ) : filteredShows.length === 0 ? (
         <div className="status-box">
-          Nenhuma série encontrada com "{searchQuery}".
+          Nenhuma série encontrada com '{searchQuery}'
         </div>
       ) : (
         <div className="grid">
@@ -466,11 +466,14 @@ export default function Home() {
                       Nenhuma watchlist criada ainda
                     </p>
                   ) : (
-                    watchlists.map((wl: any) => (
+                    watchlists.map((Watchlist: any) => (
                       <button
-                        key={wl["@key"]}
+                        key={Watchlist["@key"]}
                         onClick={() =>
-                          handleAddToWatchlist(wl["@key"], show["@key"] || "")
+                          handleAddToWatchlist(
+                            Watchlist["@key"],
+                            show["@key"] || "",
+                          )
                         }
                         style={{
                           display: "block",
@@ -491,7 +494,7 @@ export default function Home() {
                           e.currentTarget.style.backgroundColor = "#2a2a2a";
                         }}
                       >
-                        {wl.title}
+                        {Watchlist.title}
                       </button>
                     ))
                   )}

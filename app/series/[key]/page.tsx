@@ -145,7 +145,7 @@ export default function SeriesDetailPage() {
       setEditingSeason(null);
       setSeasonDrawerOpen(false);
       mutate(`/api/seasons?tvShowKey=${seriesKey}`);
-    } catch (_error) {
+    } catch {
       setSeasonFeedback("Erro ao salvar temporada");
     }
   };
@@ -181,7 +181,7 @@ export default function SeriesDetailPage() {
 
         setSeasonFeedback("✓ Temporada deletada!");
         mutate(`/api/seasons?tvShowKey=${seriesKey}`);
-      } catch (_error) {
+      } catch {
         setSeasonFeedback("Erro ao deletar");
       }
     }
@@ -257,7 +257,7 @@ export default function SeriesDetailPage() {
       setEditingEpisode(null);
       setEpisodeDrawerOpen(false);
       mutate(`/api/episodes?tvShowKey=${seriesKey}`);
-    } catch (_error) {
+    } catch {
       setEpisodeFeedback("Erro ao salvar episódio");
     }
   };
@@ -363,8 +363,7 @@ export default function SeriesDetailPage() {
 
         setEpisodeFeedback("✓ Episódio deletado!");
         mutate(`/api/episodes?tvShowKey=${seriesKey}`);
-      } catch (_error) {
-        // SUBSTITUÍDO: de error para _error
+      } catch {
         setEpisodeFeedback("Erro ao deletar");
       }
     }

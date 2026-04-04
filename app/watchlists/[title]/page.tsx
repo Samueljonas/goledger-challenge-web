@@ -95,7 +95,7 @@ export default function WatchlistDetailPage() {
       {/* Listagem de Conteúdo */}
       {watchlistShows.length === 0 ? (
         <div className="status-box">
-          Esta watchlist está vazia. Utilize o botão "Editar séries" na página
+          Esta watchlist está vazia. Utilize o botão 'Editar séries' na página
           anterior para adicionar conteúdo.
         </div>
       ) : (
