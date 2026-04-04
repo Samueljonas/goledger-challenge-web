@@ -7,7 +7,7 @@ function errorResponse(err: unknown, status = 500) {
 }
 
 // ─── GET ──────────────────────────────────────────────────────────────────────
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
     const data = await goFetch("/query/search", {
       method: "POST",
@@ -22,9 +22,9 @@ export async function GET(req: NextRequest) {
 }
 
 // ─── POST ─────────────────────────────────────────────────────────────────────
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await _req.json();
     const data = await goFetch("/invoke/createAsset", {
       method: "POST", // Invoke é sempre POST
       body: JSON.stringify({
@@ -45,9 +45,9 @@ export async function POST(req: NextRequest) {
 }
 
 // ─── PUT (Usado para adicionar séries ou mudar o título) ───────────────
-export async function PUT(req: NextRequest) {
+export async function PUT(_req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await _req.json();
 
     // Mapeia o array de strings de IDs para o formato de referência de assets da GoLedger
     const formattedTvShows = (body.tvShows || []).map((id: string) => ({
@@ -73,9 +73,9 @@ export async function PUT(req: NextRequest) {
 }
 
 // ─── DELETE ───────────────────────────────────────────────────────────────────
-export async function DELETE(req: NextRequest) {
+export async function DELETE(_req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await _req.json();
     await goFetch("/invoke/deleteAsset", {
       method: "POST", // CORRIGIDO: Sempre POST na AWS
       body: JSON.stringify({

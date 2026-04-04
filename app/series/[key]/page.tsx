@@ -1,10 +1,10 @@
 "use client";
 
 import useSWR, { useSWRConfig } from "swr";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { TvShow, Season, Episode, AGE_RATINGS } from "../../../src/types";
+import { Season, Episode, AGE_RATINGS } from "../../../src/types";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -142,7 +142,7 @@ export default function SeriesDetailPage() {
       setEditingSeason(null);
       setSeasonDrawerOpen(false);
       mutate(`/api/seasons?tvShowKey=${seriesKey}`);
-    } catch (error) {
+    } catch (_error) {
       setSeasonFeedback("Erro ao salvar temporada");
     }
   };
@@ -178,7 +178,7 @@ export default function SeriesDetailPage() {
 
         setSeasonFeedback("✓ Temporada deletada!");
         mutate(`/api/seasons?tvShowKey=${seriesKey}`);
-      } catch (error) {
+      } catch (_error) {
         setSeasonFeedback("Erro ao deletar");
       }
     }
@@ -254,7 +254,7 @@ export default function SeriesDetailPage() {
       setEditingEpisode(null);
       setEpisodeDrawerOpen(false);
       mutate(`/api/episodes?tvShowKey=${seriesKey}`);
-    } catch (error) {
+    } catch (_error) {
       setEpisodeFeedback("Erro ao salvar episódio");
     }
   };
@@ -329,8 +329,9 @@ export default function SeriesDetailPage() {
       setWatchlistDrawerOpen(false);
       mutate("/api/watchlist");
       setTimeout(() => setWatchlistFeedback(""), 3000);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Erro desconhecido.";
+    } catch (_err: unknown) {
+      const message =
+        _err instanceof Error ? _err.message : "Erro desconhecido.";
       setWatchlistFeedback(`Erro: ${message}`);
     }
   };

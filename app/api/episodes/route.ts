@@ -7,7 +7,7 @@ function errorResponse(err: unknown, status = 500) {
 }
 
 // ─── GET ──────────────────────────────────────────────────────────────────────
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
     const data = await goFetch("/query/search", {
       method: "POST",
@@ -22,12 +22,12 @@ export async function GET(req: NextRequest) {
 }
 
 // ─── POST ─────────────────────────────────────────────────────────────────────
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await _req.json();
 
     // Montagem estrita baseada no getSchema
-    const assetPayload: any = {
+    const assetPayload: Record<string, unknown> = {
       "@assetType": "episodes",
       season: {
         "@assetType": "seasons",
@@ -61,9 +61,9 @@ export async function POST(req: NextRequest) {
   }
 }
 // ─── PUT ──────────────────────────────────────────────────────────────────────
-export async function PUT(req: NextRequest) {
+export async function PUT(_req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await _req.json();
 
     // ATENÇÃO: Nunca enviamos season e episodeNumber no update porque são isKey: true
     const updatePayload: any = {
@@ -90,9 +90,9 @@ export async function PUT(req: NextRequest) {
 }
 
 // ─── DELETE ───────────────────────────────────────────────────────────────────
-export async function DELETE(req: NextRequest) {
+export async function DELETE(_req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await _req.json();
     await goFetch("/invoke/deleteAsset", {
       method: "POST", // Invoke é sempre POST
       body: JSON.stringify({

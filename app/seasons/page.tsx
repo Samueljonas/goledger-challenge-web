@@ -158,8 +158,8 @@ export default function EpisodesPage() {
       mutate();
       handleCancel();
       setTimeout(() => setFeedback(""), 3500);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Erro desconhecido.";
+    } catch (_err: unknown) {
+      const msg = _err instanceof Error ? _err.message : "Erro desconhecido.";
       setFeedback(`Erro: ${msg}`);
     }
   }

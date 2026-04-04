@@ -79,7 +79,7 @@ export default function EpisodesPage() {
 
   // Selects em cascata — formulário
   const seasonsForForm = seasonsWithShowName.filter(
-    (s) => s.tvShowName === form.tvShowName,
+    (Season) => Season.tvShowName === form.tvShowName,
   );
 
   // Selects em cascata — filtro de listagem
@@ -175,8 +175,8 @@ export default function EpisodesPage() {
       mutate();
       handleCancel();
       setTimeout(() => setFeedback(""), 3500);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Erro desconhecido.";
+    } catch (_err: unknown) {
+      const msg = _err instanceof Error ? _err.message : "Erro desconhecido.";
       setFeedback(`Erro: ${msg}`);
     }
   }
@@ -194,8 +194,8 @@ export default function EpisodesPage() {
       setFeedback("Episódio removido.");
       mutate();
       setTimeout(() => setFeedback(""), 3000);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Erro desconhecido.";
+    } catch (_err: unknown) {
+      const msg = _err instanceof Error ? _err.message : "Erro desconhecido.";
       setFeedback(`Erro: ${msg}`);
     }
   }

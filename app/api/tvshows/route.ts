@@ -6,9 +6,9 @@ function errorResponse(err: unknown, status = 500) {
   return NextResponse.json({ error: message }, { status });
 }
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
+    const { searchParams } = new URL(_req.url);
     const key = searchParams.get("key");
 
     let query: any = { "@assetType": "tvShows" };
@@ -32,9 +32,9 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await _req.json();
     const data = await goFetch("/invoke/createAsset", {
       method: "POST",
       body: JSON.stringify({
@@ -54,9 +54,9 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function PUT(req: NextRequest) {
+export async function PUT(_req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await _req.json();
     const data = await goFetch("/invoke/updateAsset", {
       method: "PUT",
       body: JSON.stringify({
@@ -74,9 +74,9 @@ export async function PUT(req: NextRequest) {
   }
 }
 
-export async function DELETE(req: NextRequest) {
+export async function DELETE(_req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await _req.json();
     await goFetch("/invoke/deleteAsset", {
       method: "DELETE",
       body: JSON.stringify({

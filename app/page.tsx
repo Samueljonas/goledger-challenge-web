@@ -89,8 +89,9 @@ export default function Home() {
       setFeedback("Série registrada na blockchain.");
       mutate("/api/tvshows");
       setTimeout(() => setFeedback(""), 3500);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Erro desconhecido.";
+    } catch (_err: unknown) {
+      const message =
+        _err instanceof Error ? _err.message : "Erro desconhecido.";
       setFeedback(`Erro: ${message}`);
     } finally {
       setIsSubmitting(false);
@@ -129,8 +130,9 @@ export default function Home() {
       setFeedback("Registro removido.");
       mutate("/api/tvshows");
       setTimeout(() => setFeedback(""), 3000);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Erro desconhecido.";
+    } catch (_err: unknown) {
+      const message =
+        _err instanceof Error ? _err.message : "Erro desconhecido.";
       setFeedback(`Erro: ${message}`);
     }
   };
@@ -178,8 +180,9 @@ export default function Home() {
       setSelectedShowForWatchlist(null);
       mutate("/api/watchlist");
       setTimeout(() => setFeedback(""), 3000);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Erro desconhecido.";
+    } catch (_err: unknown) {
+      const message =
+        _err instanceof Error ? _err.message : "Erro desconhecido.";
       setFeedback(`Erro: ${message}`);
     }
   };

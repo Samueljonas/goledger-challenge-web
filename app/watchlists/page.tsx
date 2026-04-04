@@ -53,8 +53,8 @@ export default function WatchlistsPage() {
       setNewName("");
       mutate();
       setTimeout(() => setFeedback(""), 3500);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Erro desconhecido.";
+    } catch (_err: unknown) {
+      const msg = _err instanceof Error ? _err.message : "Erro desconhecido.";
       setFeedback(`Erro: ${msg}`);
     }
   }
@@ -73,8 +73,8 @@ export default function WatchlistsPage() {
       if (editing?.title === title) setEditing(null);
       mutate();
       setTimeout(() => setFeedback(""), 3000);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Erro desconhecido.";
+    } catch (_err: unknown) {
+      const msg = _err instanceof Error ? _err.message : "Erro desconhecido.";
       setFeedback(`Erro: ${msg}`);
     }
   }
@@ -126,8 +126,8 @@ export default function WatchlistsPage() {
       setEditing(null);
       mutate();
       setTimeout(() => setFeedback(""), 3500);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Erro desconhecido.";
+    } catch (_err: unknown) {
+      const msg = _err instanceof Error ? _err.message : "Erro desconhecido.";
       setFeedback(`Erro: ${msg}`);
     }
   }

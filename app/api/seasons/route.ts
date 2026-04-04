@@ -7,9 +7,9 @@ function errorResponse(err: unknown, status = 500) {
 }
 
 // ─── GET ──────────────────────────────────────────────────────────────────────
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
+    const { searchParams } = new URL(_req.url);
     const tvShowKey = searchParams.get("tvShowKey");
 
     // Buscamos todas as temporadas
@@ -34,9 +34,9 @@ export async function GET(req: NextRequest) {
 }
 
 // ─── POST ─────────────────────────────────────────────────────────────────────
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await _req.json();
 
     const payloadParaAWS = {
       asset: [
@@ -70,9 +70,9 @@ export async function POST(req: NextRequest) {
 }
 
 // ─── PUT ──────────────────────────────────────────────────────────────────────
-export async function PUT(req: NextRequest) {
+export async function PUT(_req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await _req.json();
     const data = await goFetch("/invoke/updateAsset", {
       method: "POST", // CORRIGIDO: Invoke é SEMPRE POST na AWS
       body: JSON.stringify({
@@ -91,9 +91,9 @@ export async function PUT(req: NextRequest) {
 }
 
 // ─── DELETE ───────────────────────────────────────────────────────────────────
-export async function DELETE(req: NextRequest) {
+export async function DELETE(_req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await _req.json();
     await goFetch("/invoke/deleteAsset", {
       method: "POST", // CORRIGIDO: Invoke é SEMPRE POST na AWS
       body: JSON.stringify({
